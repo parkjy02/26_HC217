@@ -72,11 +72,16 @@
 
 ## 💡3. 시스템 구성도
 
-## • 서비스 시나리오
+• 서비스 시나리오
+
 <img width="543" height="716" alt="image" src="https://github.com/user-attachments/assets/6c9cf478-42ac-4908-bbcc-3fcf0915b540" />
 
-### • 시스템 구성도
+
+• 시스템 구성도
+
 <img width="680" height="338" alt="image" src="https://github.com/user-attachments/assets/a9729265-e719-4ed9-b6ac-971eb2c8ac94" />
 
-### • 서비스 흐름도
+
+• 서비스 흐름도
+
 <img width="702" height="467" alt="image" src="https://github.com/user-attachments/assets/48a8e558-4d03-4637-abf2-542bc66f439e" />
