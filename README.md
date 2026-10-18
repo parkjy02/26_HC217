@@ -64,3 +64,6 @@
 - **개발 도구** : Visual Studio Code, Arduino IDE, STM32CubeIDE, CMake, Catkin Workspace
 - **통신 및 시스템 연동** : UART, USB, HTTP, ROS Topic/Service, Dynamixel Protocol 2.0
 - **형상관리 및 협업** : GitHub, Discord
+
+
+## 💡2. 팀원 소개
