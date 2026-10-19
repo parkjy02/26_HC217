@@ -94,14 +94,15 @@
 
 ## 💡5. 핵심 소스코드
 
-### 5-1. AMCL 기반 위치추정 알고리즘 개선
+### 5-1. 다층 환경 자율주행 및 위치추정
+
+
+**핵심 소스코드 ①: 가우시안 분포 기반 파티클 생성**
 
 - **개선 목적** : 파티클 재분포 방식 개선을 통한 위치추정 안정성 향상
 - **파티클 생성** : 현재 추정 위치를 중심으로 가우시안 분포 기반 신규 파티클 생성
 - **유효성 검증** : 지도 내 유효 좌표 및 장애물 점유 여부 확인을 통한 자유 공간 파티클 선별
 - **리샘플링 적용** : 개선된 파티클 생성 함수를 AMCL 리샘플링 과정에 적용
-
-**핵심 소스코드 ①: 가우시안 분포 기반 파티클 생성**
 
 ```cpp
 pf_vector_t
@@ -125,6 +126,7 @@ AmclNode::gaussianPoseGenerator(void* arg)
   return p;
 }
 ```
+**전체 소스코드** : [amcl_node.cpp](./source/SLAM/amcl_custom/src/amcl_node.cpp)
 
 
 **핵심 소스코드 ② : 다층 환경 지도 전환 및 자율주행 재초기화**
@@ -187,6 +189,10 @@ def _restart_nav_stack(self, target_is_b: bool, publish_init: bool = True):
 
 **핵심 소스코드 ① : 목표 위치 이동 및 보정**
 
+- **목표 위치 이동** : MoveIt을 활용한 로봇팔 말단의 목표 좌표 이동
+- **위치 오차 보정** : 최초 이동 후 FK 기반 관절 위치 보정 수행
+- **버튼 조작** : 보정된 위치에서 버튼 압입 동작 실행 및 결과 반환
+
 ```python
 def move_to_target_then_compensate(self, x, y, z, label="target"):
     if not self.move_to_position_only(x, y, z, label=label):
@@ -206,9 +212,14 @@ def move_to_target_then_compensate(self, x, y, z, label="target"):
         "returned_to_start": bool(result),
     }
 ```
+**전체 소스코드** : [yolo_detect_1.py](./source/로봇팔/my_robot_odom/src/yolo_detect_1.py)
 
 
 **핵심 소스코드 ② : 모터 전류 기반 접촉 감지**
+
+- **기준 전류 측정** : 버튼 조작 전 2·3번 관절의 기준 전류 측정
+- **전류 변화 분석** : 실시간 관절 전류와 기준 전류 간 변화량 계산
+- **접촉 여부 판정** : 관절별 전류 변화량이 설정된 임계값을 충족하는지 확인
 
 ```python
 def check_contact_from_current(self, baseline, label="target"):
@@ -225,6 +236,7 @@ def check_contact_from_current(self, baseline, label="target"):
                            label, i2, d2, i3, d3, str(contact))
     return contact, info
 ```
+**전체 소스코드** : [yolo_detect_1.py](./source/로봇팔/my_robot_odom/src/yolo_detect_1.py)
 
 
 **핵심 소스코드 ③ : FK 기반 위치 오차 보정**
@@ -269,3 +281,4 @@ def find_best_compensation_once(self, target_xyz):
             break
     return best
 ```
+**전체 소스코드** : [yolo_detect_1.py](./source/로봇팔/my_robot_odom/src/yolo_detect_1.py)
