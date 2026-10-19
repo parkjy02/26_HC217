@@ -1,0 +1,18 @@
+<launch>
+  <!-- SAFETY: no physical motion by default. -->
+  <arg name="dry_run" default="true" />
+  <arg name="enable_motion" default="false" />
+  <arg name="waypoints_file" default="$(find gnss_waypoint_navigation)/config/waypoints.yaml" />
+  <node pkg="gnss_waypoint_navigation" type="gnss_waypoint_nav.py"
+        name="gnss_waypoint_nav" output="screen">
+    <param name="dry_run" value="$(arg dry_run)" />
+    <param name="enable_motion" value="$(arg enable_motion)" />
+    <param name="waypoints_file" value="$(arg waypoints_file)" />
+    <param name="fix_topic" value="/fix" />
+    <param name="from_ll_service" value="/fromLL" />
+    <param name="action_name" value="/move_base" />
+    <param name="map_frame" value="map" />
+    <param name="fix_max_age_sec" value="5.0" />
+    <param name="goal_timeout_sec" value="180.0" />
+  </node>
+</launch>

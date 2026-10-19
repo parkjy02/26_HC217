@@ -1,0 +1,20 @@
+# DEMONSTRATION COORDINATES ONLY. NOT A REAL NAVIGATION ROUTE.
+# Never set example_only: false before replacing all positions with surveyed
+# waypoints and validating navsat_transform, map frame, TF and robot safety.
+example_only: true
+waypoints:
+  - name: demo_start
+    latitude: 37.000000
+    longitude: 127.000000
+    altitude: 0.0
+    map_yaw_deg: 0.0
+  - name: demo_east
+    latitude: 37.000000
+    longitude: 127.000060
+    altitude: 0.0
+    map_yaw_deg: 0.0
+  - name: demo_north
+    latitude: 37.000045
+    longitude: 127.000060
+    altitude: 0.0
+    map_yaw_deg: 90.0
