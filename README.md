@@ -101,7 +101,7 @@
 - **유효성 검증** : 지도 내 유효 좌표 및 장애물 점유 여부 확인을 통한 자유 공간 파티클 선별
 - **리샘플링 적용** : 개선된 파티클 생성 함수를 AMCL 리샘플링 과정에 적용
 
-**핵심 소스코드: 가우시안 분포 기반 파티클 생성**
+**핵심 소스코드 ①: 가우시안 분포 기반 파티클 생성**
 
 ```cpp
 pf_vector_t
@@ -125,6 +125,45 @@ AmclNode::gaussianPoseGenerator(void* arg)
   return p;
 }
 ```
+
+
+**핵심 소스코드 ② : ROS 주행 명령 기반 차동구동 PWM 제어**
+
+- **주행 명령 수신** : ROS Navigation에서 생성한 선속도 및 각속도 명령 수신
+- **차동구동 변환** : 로봇의 바퀴 간 거리를 고려하여 좌·우 바퀴의 목표 속도 계산
+- **PWM 변환** : 목표 속도를 모터 구동을 위한 PWM 명령값으로 변환
+- **속도 변화 제한** : PWM 변화량을 단계적으로 제한하여 급격한 모터 출력 변화 완화
+
+```python
+def _mix_cmdvel_to_pwm(self, lin: float, ang: float):
+    if abs(lin) < self.thresh_lin:
+        lin = 0.0
+    if abs(ang) < 1e-3:
+        ang = 0.0
+
+    v_l = lin - ang * (WHEEL_BASE / 2.0)
+    v_r = lin + ang * (WHEEL_BASE / 2.0)
+
+    v_abs_max = self.max_cmd_vel_x
+
+    pwm_l_mag = self._vel_to_pwm_mag(abs(v_l), v_abs_max)
+    pwm_r_mag = self._vel_to_pwm_mag(abs(v_r), v_abs_max)
+
+    pwm_l = pwm_l_mag if v_l >= 0 else -pwm_l_mag
+    pwm_r = pwm_r_mag if v_r >= 0 else -pwm_r_mag
+
+    pwm_l = self._clamp_pwm_signed(pwm_l)
+    pwm_r = self._clamp_pwm_signed(pwm_r)
+
+    self.cur_pwm_L = self._slew(self.cur_pwm_L, pwm_l, self.pwm_slew_step)
+    self.cur_pwm_R = self._slew(self.cur_pwm_R, pwm_r, self.pwm_slew_step)
+
+    self.cur_pwm_L = self._clamp_pwm_signed(self.cur_pwm_L)
+    self.cur_pwm_R = self._clamp_pwm_signed(self.cur_pwm_R)
+
+    return self.cur_pwm_L, self.cur_pwm_R
+```
+
 
 
 ### 5-2. 비전 기반 로봇팔 제어 및 버튼 조작
