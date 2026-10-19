@@ -184,7 +184,7 @@ def _restart_nav_stack(self, target_is_b: bool, publish_init: bool = True):
 - **위치 제어** : MoveIt 기반 목표 위치 이동 및 FK를 활용한 관절 위치 보정
 - **접촉 감지** : Dynamixel 모터의 관절 전류 변화를 이용한 버튼 접촉 판정
 - **동작 검증** : 버튼 조작 후 ON/OFF 상태 확인 및 실패 시 재시도
-
+<br><br>
 
 **핵심 소스코드 ① : 목표 위치 이동 및 보정**
 
