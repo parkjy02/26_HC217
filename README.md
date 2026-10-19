@@ -8,7 +8,7 @@
 - **프로젝트 명** : GNSS-LiDAR 기반 실내외 다층 이동 물류 운송 로봇
 - **프로젝트 정의** : LiDAR 및 GNSS 기반 자율주행, 비전 기반 엘리베이터 조작, 매니퓰레이터와 자동 적재함을 통합하여 실내외 다층 환경에서 자율적인 물류 운송을 수행하는 모바일 매니퓰레이터 시스템
 
-<img width="624" height="686" alt="image" src="https://github.com/user-attachments/assets/39174ec5-fd23-4a66-a2ba-b913f8ea033b" />
+<img width="424" height="486" alt="image" src="https://github.com/user-attachments/assets/39174ec5-fd23-4a66-a2ba-b913f8ea033b" />
 
 ### 1-2. 개발 배경 및 필요성
 
