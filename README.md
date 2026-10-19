@@ -90,3 +90,35 @@
 ## 💡4. 작품 소개영상
 
 [![한이음 드림업 프로젝트 소개영상](https://img.youtube.com/vi/miliMlOqH7A/hqdefault.jpg)](https://www.youtube.com/watch?v=miliMlOqH7A)
+
+
+## 💡5. 핵심 소스코드
+
+### 5-1. AMCL 기반 위치추정 알고리즘 개선
+
+기존 AMCL의 파티클 재분포 방식을 수정하여, 현재 추정 위치 주변에 가우시안 분포 기반 파티클을 생성하도록 구현하였습니다. 최고 가중치 군집의 추정 위치를 기준으로 새로운 파티클을 생성하고, 생성 위치가 지도 내 자유 공간인지 검사한 후 리샘플링에 활용합니다.
+
+**핵심 소스코드: 가우시안 분포 기반 파티클 생성**
+
+```cpp
+pf_vector_t
+AmclNode::gaussianPoseGenerator(void* arg)
+{
+  map_t* map = (map_t*)arg;
+  pf_vector_t p;
+
+  for(;;)
+  {
+    p.v[0] = temp_x + gaussianRandom(0, 0.5);
+    p.v[1] = temp_y + gaussianRandom(0, 0.5);
+    p.v[2] = temp_t + gaussianRandom(0, 0.1) * 2 * 3.141592 * 0.05;
+
+    int i,j;
+    i = MAP_GXWX(map, p.v[0]);
+    j = MAP_GYWY(map, p.v[1]);
+    if(MAP_VALID(map,i,j) && (map->cells[MAP_INDEX(map,i,j)].occ_state == -1))
+      break;
+  }
+  return p;
+}
+```
