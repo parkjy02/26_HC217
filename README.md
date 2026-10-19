@@ -127,42 +127,52 @@ AmclNode::gaussianPoseGenerator(void* arg)
 ```
 
 
-**핵심 소스코드 ② : ROS 주행 명령 기반 차동구동 PWM 제어**
+**핵심 소스코드 ② : 다층 환경 지도 전환 및 자율주행 재초기화**
 
-- **주행 명령 수신** : ROS Navigation에서 생성한 선속도 및 각속도 명령 수신
-- **차동구동 변환** : 로봇의 바퀴 간 거리를 고려하여 좌·우 바퀴의 목표 속도 계산
-- **PWM 변환** : 목표 속도를 모터 구동을 위한 PWM 명령값으로 변환
-- **속도 변화 제한** : PWM 변화량을 단계적으로 제한하여 급격한 모터 출력 변화 완화
+- **지도 전환** : 층간 이동 시 해당 층의 지도 파일 및 초기 위치 정보 선택
+- **시스템 재실행** : 기존 Navigation Stack 종료 후 새로운 지도 기반 자율주행 시스템 실행
+- **위치추정 초기화** : AMCL 초기 위치 재설정 및 `move_base` 준비 상태 확인
+- **경로 정보 갱신** : Costmap 초기화를 통한 이전 층의 장애물 정보 제거
 
 ```python
-def _mix_cmdvel_to_pwm(self, lin: float, ang: float):
-    if abs(lin) < self.thresh_lin:
-        lin = 0.0
-    if abs(ang) < 1e-3:
-        ang = 0.0
+def _restart_nav_stack(self, target_is_b: bool, publish_init: bool = True):
+    target_map_file = self._target_map_file(target_is_b)
+    x, y, yaw = self._target_init_pose(target_is_b)
 
-    v_l = lin - ang * (WHEEL_BASE / 2.0)
-    v_r = lin + ang * (WHEEL_BASE / 2.0)
+    if not os.path.isfile(target_map_file):
+        return False, "map file not found: {}".format(target_map_file)
 
-    v_abs_max = self.max_cmd_vel_x
+    self._stop_nav_stack()
+    rospy.sleep(0.5)
 
-    pwm_l_mag = self._vel_to_pwm_mag(abs(v_l), v_abs_max)
-    pwm_r_mag = self._vel_to_pwm_mag(abs(v_r), v_abs_max)
+    proc = self._start_nav_stack(target_map_file, target_is_b)
+    with self.nav_proc_lock:
+        self.nav_proc = proc
 
-    pwm_l = pwm_l_mag if v_l >= 0 else -pwm_l_mag
-    pwm_r = pwm_r_mag if v_r >= 0 else -pwm_r_mag
+    move_base_ok = self._wait_for_move_base(self.startup_timeout)
+    amcl_ok = self._wait_for_amcl_pose(self.amcl_wait_timeout)
 
-    pwm_l = self._clamp_pwm_signed(pwm_l)
-    pwm_r = self._clamp_pwm_signed(pwm_r)
+    if publish_init:
+        self._publish_initialpose(x, y, yaw)
 
-    self.cur_pwm_L = self._slew(self.cur_pwm_L, pwm_l, self.pwm_slew_step)
-    self.cur_pwm_R = self._slew(self.cur_pwm_R, pwm_r, self.pwm_slew_step)
+    if self.switch_settle_sec > 0.0:
+        rospy.sleep(self.switch_settle_sec)
 
-    self.cur_pwm_L = self._clamp_pwm_signed(self.cur_pwm_L)
-    self.cur_pwm_R = self._clamp_pwm_signed(self.cur_pwm_R)
+    if self.clear_costmap:
+        self._call_clear_costmaps()
+        if self.double_clear and self.post_clear_delay > 0.0:
+            rospy.sleep(self.post_clear_delay)
+            self._call_clear_costmaps()
 
-    return self.cur_pwm_L, self.cur_pwm_R
+    self.current_map_is_b = bool(target_is_b)
+    which = "B" if target_is_b else "A"
+    msg = "nav stack relaunched with map {} ({:.3f},{:.3f},{:.3f}rad), move_base_ok={}, amcl_ok={}".format(
+        which, x, y, yaw, move_base_ok, amcl_ok
+    )
+    return True, msg
 ```
+
+**전체 소스코드** : [map_mux.py](./source/SLAM/my_robot_odom/scripts/map_mux.py)
 
 
 
