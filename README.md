@@ -135,6 +135,7 @@ AmclNode::gaussianPoseGenerator(void* arg)
 - **접촉 감지** : Dynamixel 모터의 관절 전류 변화를 이용한 버튼 접촉 판정
 - **동작 검증** : 버튼 조작 후 ON/OFF 상태 확인 및 실패 시 재시도
 
+
 **핵심 소스코드 ① : 목표 위치 이동 및 보정**
 
 ```python
@@ -157,6 +158,7 @@ def move_to_target_then_compensate(self, x, y, z, label="target"):
     }
 ```
 
+
 **핵심 소스코드 ② : 모터 전류 기반 접촉 감지**
 
 ```python
@@ -173,4 +175,48 @@ def check_contact_from_current(self, baseline, label="target"):
     rospy.loginfo_throttle(0.2, "Current monitor [%s]: q2=%.1f(d=%.1f) q3=%.1f(d=%.1f) contact=%s",
                            label, i2, d2, i3, d3, str(contact))
     return contact, info
+```
+
+
+**핵심 소스코드 ③ : FK 기반 위치 오차 보정**
+
+- **관절 후보 탐색** : 2·3번 관절의 각도를 단계적으로 변경하고 5번 관절을 연동하여 보정 후보 생성
+- **오차 평가** : 순기구학(FK)을 통해 계산한 로봇팔 말단 위치와 목표 좌표 간 오차 평가
+- **최적 자세 선정** : 위치 오차, 자세 오차 및 높이 감소량을 고려하여 최적 관절 조합 선정
+
+```python
+def find_best_compensation_once(self, target_xyz):
+    info = self.collect_joint_value_samples()
+    joint_names = info["joint_names"]
+    current_joints = info["median_values"]
+    name_to_idx = {n: i for i, n in enumerate(joint_names)}
+    i2, i3, i5 = name_to_idx["Revolute2"], name_to_idx["Revolute3"], name_to_idx["Revolute5"]
+    q2_cur, q3_cur = current_joints[i2], current_joints[i3]
+
+    best = None
+    for stage in self.comp_adaptive_stages:
+        q2_span = self.comp_q2_span * stage["q2_span_scale"]
+        q3_span = self.comp_q3_span * stage["q3_span_scale"]
+        z_drop_limit = stage["z_drop_limit"]
+        q5_gain = stage["q5_gain"]
+        for dq2 in np.arange(-q2_span, q2_span + 1e-9, self.comp_step):
+            for dq3 in np.arange(-q3_span, q3_span + 1e-9, self.comp_step):
+                cand = list(current_joints)
+                q2_new = self.clamp_joint("Revolute2", q2_cur + dq2)
+                q3_new = self.clamp_joint("Revolute3", q3_cur + dq3)
+                q5_new = self.blend_q5_target(current_joints[i5], self.compute_q5_for_level(q2_new, q3_new), q5_gain)
+                cand[i2], cand[i3], cand[i5] = q2_new, q3_new, q5_new
+                ev = self.evaluate_comp_candidate(joint_names, cand, target_xyz)
+                if ev is None:
+                    continue
+                fk_pose = self.get_fk_pose(joint_names, cand, self.ee_link)
+                pos = self.pose_to_xyz(fk_pose)
+                z_drop = max(0.0, target_xyz[2] - pos[2])
+                if z_drop > z_drop_limit:
+                    continue
+                if best is None or ev["score"] < best["score"]:
+                    best = ev
+        if best is not None:
+            break
+    return best
 ```
