@@ -125,3 +125,52 @@ AmclNode::gaussianPoseGenerator(void* arg)
   return p;
 }
 ```
+
+
+### 5-2. 비전 기반 로봇팔 제어 및 버튼 조작
+
+- **객체 인식** : YOLOv8과 Depth Camera를 활용한 엘리베이터 버튼 인식 및 3차원 좌표 추정
+- **좌표 변환** : TF를 이용한 카메라 좌표계에서 로봇 기준 좌표계로의 변환
+- **위치 제어** : MoveIt 기반 목표 위치 이동 및 FK를 활용한 관절 위치 보정
+- **접촉 감지** : Dynamixel 모터의 관절 전류 변화를 이용한 버튼 접촉 판정
+- **동작 검증** : 버튼 조작 후 ON/OFF 상태 확인 및 실패 시 재시도
+
+**핵심 소스코드 ① : 목표 위치 이동 및 보정**
+
+```python
+def move_to_target_then_compensate(self, x, y, z, label="target"):
+    if not self.move_to_position_only(x, y, z, label=label):
+        return {
+            "motion_ok": False,
+            "contact_detected": False,
+            "returned_to_start": False,
+        }
+    target_xyz = [x, y, z]
+    self.compensate_after_move_once(target_xyz, label=label)
+    result = self.execute_pose_push(label=label)
+    if isinstance(result, dict):
+        return result
+    return {
+        "motion_ok": bool(result),
+        "contact_detected": False,
+        "returned_to_start": bool(result),
+    }
+```
+
+**핵심 소스코드 ② : 모터 전류 기반 접촉 감지**
+
+```python
+def check_contact_from_current(self, baseline, label="target"):
+    if baseline is None:
+        return False, None
+    i2, i3 = self.get_current_q2_q3_raw()
+    if i2 is None or i3 is None:
+        return False, None
+    d2 = i2 - baseline["q2"]
+    d3 = i3 - baseline["q3"]
+    contact = (d3 >= self.contact_q3_delta_th) and (abs(d2) >= self.contact_q2_abs_delta_th)
+    info = {"i2": i2, "i3": i3, "d2": d2, "d3": d3}
+    rospy.loginfo_throttle(0.2, "Current monitor [%s]: q2=%.1f(d=%.1f) q3=%.1f(d=%.1f) contact=%s",
+                           label, i2, d2, i3, d3, str(contact))
+    return contact, info
+```
