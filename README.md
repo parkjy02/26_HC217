@@ -127,7 +127,7 @@ AmclNode::gaussianPoseGenerator(void* arg)
 }
 ```
 **전체 소스코드** : [amcl_node.cpp](./source/SLAM/amcl_custom/src/amcl_node.cpp)
-
+<br><br>
 
 **핵심 소스코드 ② : 다층 환경 지도 전환 및 자율주행 재초기화**
 
@@ -175,7 +175,7 @@ def _restart_nav_stack(self, target_is_b: bool, publish_init: bool = True):
 ```
 
 **전체 소스코드** : [map_mux.py](./source/SLAM/my_robot_odom/scripts/map_mux.py)
-
+<br><br>
 
 ### 5-2. 비전 기반 로봇팔 제어 및 버튼 조작
 
@@ -212,7 +212,7 @@ def move_to_target_then_compensate(self, x, y, z, label="target"):
     }
 ```
 **전체 소스코드** : [yolo_detect_1.py](./source/로봇팔/my_robot_odom/src/yolo_detect_1.py)
-
+<br><br>
 
 **핵심 소스코드 ② : 모터 전류 기반 접촉 감지**
 
@@ -236,7 +236,7 @@ def check_contact_from_current(self, baseline, label="target"):
     return contact, info
 ```
 **전체 소스코드** : [yolo_detect_1.py](./source/로봇팔/my_robot_odom/src/yolo_detect_1.py)
-
+<br><br>
 
 **핵심 소스코드 ③ : FK 기반 위치 오차 보정**
 
