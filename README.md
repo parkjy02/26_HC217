@@ -129,8 +129,6 @@ AmclNode::gaussianPoseGenerator(void* arg)
 **전체 소스코드** : [amcl_node.cpp](./source/SLAM/amcl_custom/src/amcl_node.cpp)
 
 
-
-
 **핵심 소스코드 ② : 다층 환경 지도 전환 및 자율주행 재초기화**
 
 - **지도 전환** : 층간 이동 시 해당 층의 지도 파일 및 초기 위치 정보 선택
@@ -179,7 +177,6 @@ def _restart_nav_stack(self, target_is_b: bool, publish_init: bool = True):
 **전체 소스코드** : [map_mux.py](./source/SLAM/my_robot_odom/scripts/map_mux.py)
 
 
-
 ### 5-2. 비전 기반 로봇팔 제어 및 버튼 조작
 
 - **객체 인식** : YOLOv8과 Depth Camera를 활용한 엘리베이터 버튼 인식 및 3차원 좌표 추정
@@ -217,8 +214,6 @@ def move_to_target_then_compensate(self, x, y, z, label="target"):
 **전체 소스코드** : [yolo_detect_1.py](./source/로봇팔/my_robot_odom/src/yolo_detect_1.py)
 
 
-
-
 **핵심 소스코드 ② : 모터 전류 기반 접촉 감지**
 
 - **기준 전류 측정** : 버튼 조작 전 2·3번 관절의 기준 전류 측정
@@ -241,8 +236,6 @@ def check_contact_from_current(self, baseline, label="target"):
     return contact, info
 ```
 **전체 소스코드** : [yolo_detect_1.py](./source/로봇팔/my_robot_odom/src/yolo_detect_1.py)
-
-
 
 
 **핵심 소스코드 ③ : FK 기반 위치 오차 보정**
