@@ -69,8 +69,7 @@
 
 
 ## 💡2. 팀원 소개
-<img width="1127" height="398" alt="image" src="https://github.com/user-attachments/assets/e18098ed-a511-4dd2-85fa-ad892f90e466" />
-
+<img width="930" height="328" alt="image" src="https://github.com/user-attachments/assets/e8279b06-76d5-4f39-ba00-4201ffad70df" />
 
 ## 💡3. 시스템 구성도
 
